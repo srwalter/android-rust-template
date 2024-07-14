@@ -1,0 +1,49 @@
+[package]
+name = "android-rust-template"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+log = "0.4"
+log-panics = "2.1"
+
+[dependencies.eframe]
+version = "0.23"
+default-features = false
+features = [
+    "glow",
+    "default_fonts",
+    "android-native-activity",
+    "wayland",
+    "x11",
+]
+
+[target.'cfg(target_os = "linux")'.dependencies.winit]
+version = "0.28"
+default-features = false
+features = ["wayland-csd-adwaita"]
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.13"
+android-wakelock = "0.1"
+jni = "0.21"
+
+[target.'cfg(target_os = "android")'.dependencies.ndk]
+version = "0.7"
+features = ["audio"]
+
+[target.'cfg(target_os = "android")'.dependencies.winit]
+version = "0.28"
+default-features = false
+features = ["android-native-activity"]
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+cpal = "0.15"
+env_logger = "0.10"
+
+[build-dependencies.time]
+version = "0.3"
+features = ["formatting", "local-offset"]
