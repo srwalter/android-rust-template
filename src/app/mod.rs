@@ -1,13 +1,18 @@
 use eframe::{
-    egui::{self, Label, Margin, RichText},
+    egui::{self, Button, Label, Margin, RichText},
     CreationContext,
 };
 
 use crate::PlatformContext;
 
+mod controller;
+use controller::{Controller, OutgoingMessage};
+
 pub struct App {
     _platform_ctx: PlatformContext,
     content_margin: Margin,
+    ctrl: Controller,
+    msg: String,
 }
 
 impl App {
@@ -18,16 +23,25 @@ impl App {
         log::info!("screen PPI: {}", ctx.egui_ctx.pixels_per_point());
 
         let content_margin = Margin::default();
+        let ctrl = Controller::new();
 
         Self {
             _platform_ctx: platform_ctx,
             content_margin,
+            ctrl,
+            msg: "".to_string(),
         }
     }
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        if let Some(msg) = self.ctrl.try_recv() {
+            match msg {
+                OutgoingMessage::Toast(msg) => self.msg = msg,
+            }
+        }
+
         // Scale up everything by 50%
         if let Some(ppp) = frame.info().native_pixels_per_point {
             ctx.set_pixels_per_point(ppp * 1.5);
@@ -44,6 +58,18 @@ impl eframe::App for App {
                         .color(ui.visuals().strong_text_color()),
                 ),
             );
+
+            ui.add(
+                Label::new(
+                    RichText::new(self.msg.clone())
+                        .size(60.0)
+                        .color(ui.visuals().strong_text_color()),
+                ),
+            );
+
+            if ui.add(Button::new("Poke")).clicked() {
+                self.ctrl.poke();
+            }
         });
     }
 
