@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{self, Button, Label, Margin, RichText},
+    egui::{self, Button, Label, Margin, RichText, ScrollArea},
     CreationContext,
 };
 
@@ -12,7 +12,7 @@ pub struct App {
     _platform_ctx: PlatformContext,
     content_margin: Margin,
     ctrl: Controller,
-    msg: String,
+    msg: Vec<String>,
 }
 
 impl App {
@@ -29,7 +29,7 @@ impl App {
             _platform_ctx: platform_ctx,
             content_margin,
             ctrl,
-            msg: "".to_string(),
+            msg: vec![],
         }
     }
 }
@@ -38,7 +38,7 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         if let Some(msg) = self.ctrl.try_recv() {
             match msg {
-                OutgoingMessage::Toast(msg) => self.msg = msg,
+                OutgoingMessage::Toast(msg) => self.msg.push(msg),
             }
         }
 
@@ -59,17 +59,23 @@ impl eframe::App for App {
                 ),
             );
 
-            ui.add(
-                Label::new(
-                    RichText::new(self.msg.clone())
-                        .size(60.0)
-                        .color(ui.visuals().strong_text_color()),
-                ),
-            );
-
             if ui.add(Button::new("Poke")).clicked() {
                 self.ctrl.poke();
             }
+
+            ScrollArea::vertical()
+                .auto_shrink([false, false])
+                .show(ui, |ui| {
+                for m in &self.msg {
+                    ui.add(
+                        Label::new(
+                            RichText::new(m)
+                                .size(30.0)
+                                .color(ui.visuals().strong_text_color()),
+                        ),
+                    );
+                }
+            });
         });
     }
 
